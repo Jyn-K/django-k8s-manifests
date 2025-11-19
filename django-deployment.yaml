@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-app
+  namespace: django-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: django
+  template:
+    metadata:
+      labels:
+        app: django
+    spec:
+      initContainers:
+      - name: wait-for-mysql
+        image: busybox
+        command: ['sh', '-c', 'until nc -z mysql 3306; do sleep 2; done']
+      containers:
+      - name: django
+        image: y30308/django-app:2.0
+        env:
+        - name: DB_HOST
+          value: "mysql"
+        - name: DB_NAME
+          value: "djangodb"
+        - name: DB_USER
+          value: "djangouser"
+        - name: DB_PASSWORD
+          value: "djangopass"
+        ports:
+        - containerPort: 8000
